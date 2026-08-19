@@ -1,4 +1,7 @@
-﻿### 5.6.1
+﻿### 5.6.2
+* BUG FIX - Load all TextMeshPro font bundle assets and repair atlas/material references for managed games
+
+### 5.6.1
 * BUG FIX - Resolve hotkey unresponsiveness and GUI unstripping errors in IL2CPP (#834)
 * BUG FIX - Resolve font asset bundle loading failure in IL2CPP (#831)
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
 using XUnity.Common.Constants;
@@ -50,11 +51,50 @@ namespace XUnity.AutoTranslator.Plugin.Core.Fonts
                if( UnityTypes.AssetBundle_Methods.LoadAllAssets != null )
                {
 #if MANAGED
-                  var assets = (UnityEngine.Object[])UnityTypes.AssetBundle_Methods.LoadAllAssets.Invoke( bundle, new object[] { UnityTypes.TMP_FontAsset.UnityType } );
+                  var assets = bundle.LoadAllAssets();
+                  font = assets?.FirstOrDefault( asset => UnityTypes.TMP_FontAsset.ClrType.IsInstanceOfType( asset ) );
+
+                  if( font != null )
+                  {
+                     var atlasTexture = assets?.OfType<Texture2D>().FirstOrDefault();
+                     var material = assets?.OfType<Material>().FirstOrDefault();
+                     try
+                     {
+                        var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+                        var fontType = font.GetType();
+
+                        if( material != null )
+                        {
+                           fontType.GetProperty( "material", flags )?.SetValue( font, material, null );
+                        }
+                        if( atlasTexture != null )
+                        {
+                           fontType.GetProperty( "atlasTextures", flags )?.SetValue( font, new[] { atlasTexture }, null );
+                           fontType.GetField( "m_AtlasTexture", flags )?.SetValue( font, atlasTexture );
+                           fontType.GetField( "m_AtlasTextureIndex", flags )?.SetValue( font, 0 );
+                           fontType.GetField( "atlas", flags )?.SetValue( font, atlasTexture );
+
+                           if( material != null && material.GetTexture( "_MainTex" ) == null )
+                           {
+                              material.SetTexture( "_MainTex", atlasTexture );
+                           }
+                        }
+
+                        var resolvedAtlas = fontType.GetProperty( "atlasTexture", flags )?.GetValue( font, null );
+                        var resolvedMaterial = fontType.GetProperty( "material", flags )?.GetValue( font, null );
+                        XuaLogger.AutoTranslator.Info(
+                           "Repaired TextMesh Pro font references: atlas=" + ( resolvedAtlas != null ? "ok" : "missing" )
+                           + ", material=" + ( resolvedMaterial != null ? "ok" : "missing" ) );
+                     }
+                     catch( Exception e )
+                     {
+                        XuaLogger.AutoTranslator.Warn( e, "Could not repair TextMesh Pro font references." );
+                     }
+                  }
 #else
                   var assets = (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<UnityEngine.Object>)UnityTypes.AssetBundle_Methods.LoadAllAssets.Invoke( bundle, new object[] { UnityTypes.TMP_FontAsset.UnityType } );
-#endif
                   font = assets?.FirstOrDefault();
+#endif
                }
                else if( UnityTypes.AssetBundle_Methods.LoadAll != null )
                {
