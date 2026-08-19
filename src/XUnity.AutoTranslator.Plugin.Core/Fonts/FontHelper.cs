@@ -109,9 +109,39 @@ namespace XUnity.AutoTranslator.Plugin.Core.Fonts
          }
          else
          {
-            XuaLogger.AutoTranslator.Info( "Attempting to load TextMesh Pro font from internal Resources API." );
+            bool isAssetBundleNameInsideSystemFont = false;
+            try
+            {
+               string[] systemFontNames = GetOSInstalledFontNames();
+               for( int i = 0; i < systemFontNames.Length; i++ )
+               {
+                  if( systemFontNames[ i ] == assetBundle )
+                  {
+                     isAssetBundleNameInsideSystemFont = true;
+                     break;
+                  }
+               }
+            }
+            catch( Exception ex )
+            {
+               XuaLogger.AutoTranslator.Error( $"Unable to fetch installed font names: {ex.Message}" );
+            }
 
-            font = Resources.Load( assetBundle );
+            if( UnityTypes.TMP_FontAsset_Methods.CreateFontAsset != null && isAssetBundleNameInsideSystemFont )
+            {
+               XuaLogger.AutoTranslator.Info( $"A font {assetBundle} is installed on the system. Attempting to create a TextMesh Pro font from it." );
+               font = (UnityEngine.Object)UnityTypes.TMP_FontAsset_Methods.CreateFontAsset.Invoke( null, new object[] { assetBundle, "", 90 } );
+            }
+            else
+            {
+               if( UnityTypes.TMP_FontAsset_Methods.CreateFontAsset == null )
+               {
+                  XuaLogger.AutoTranslator.Warn( "TMP_FontAsset.CreateFontAsset not found. TextMeshPro version might be below 3.2.0." );
+               }
+
+               XuaLogger.AutoTranslator.Info( "Attempting to load TextMesh Pro font from internal Resources API." );
+               font = Resources.Load( assetBundle );
+            }
          }
 
          if( font != null )
@@ -144,7 +174,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Fonts
          if( File.Exists( overrideFontPath ) )
          {
             XuaLogger.AutoTranslator.Info( "Attempting to load TextMesh Pro font from asset bundle." );
-            
+
             var bundle = AssetBundleProxy.LoadFromFile( overrideFontPath );
 
             if( bundle == null )

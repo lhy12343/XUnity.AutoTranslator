@@ -469,22 +469,37 @@ The `PostprocessorsFile` allows defining entries that modifies the translated te
 #### UI Resizing
 Often when performing a translation on a text component, the resulting text is larger than the original. This often means that there is not enough room in the text component for the result. This section describes ways to remedy that by changing important parameters of the text components.
 
-By default, the plugin will attempt some basic auto-resizing behaviour, which are controlled by the following parameters: `EnableUIResizing`, `ResizeUILineSpacingScale`, `ForceUIResizing`, `OverrideFont` and `OverrideFontTextMeshPro`.
+By default, the plugin will attempt some basic auto-resizing behaviour, which are controlled by the following parameters:
  * `EnableUIResizing`: Resizes the components when a translation is performed.
  * `ForceUIResizing`: Resizes all components at all times, period.
  * `ResizeUILineSpacingScale`: Changes the line spacing of resized components. UGUI only.
- * `OverrideFont`: Changes the font of all text components regardless of `EnableUIResizing` and `ForceUIResizing`. UGUI only.
- * `OverrideFontTextMeshPro`: Consider using `FallbackFontTextMeshPro` instead. Changes the font of all text components regardless of `EnableUIResizing` and `ForceUIResizing`. TextMeshPro only. This option is able to load a font in two different ways. If the specified string indicates a path within the game folder, then that file will be attempted to be loaded as an asset bundle (requires Unity 2018 or greater (or alternatively a custom asset bundle built specifically for the targeted game)). If not, it will be attempted to be loaded through the Resources API. Default resources that are often distributed with TextMeshPro are: `Fonts & Materials/LiberationSans SDF` or `Fonts & Materials/ARIAL SDF`.
- * `FallbackFontTextMeshPro`: Adds a fallback font that TextMesh Pro can use in case a specific character is not supported.
-
-An additional note on changing the font of TextMeshPro: You can download some pre-built asset bundles for Unity 2018 and 2019 in the release tab, but for now, they are not particularly well tested. If you want to try them out, simply download the .zip folder and put one of the font assets into the game folder. Then configure it up by writing the name of the file in the configuration file in `OverrideFontTextMeshPro`.
 
 Resizing of a UI component does not refer to changing of it's dimensions, but rather how the component handles overflow. The plugin changes the overflow parameters such that text is more likely to be displayed.
 
 The configuratiaon `EnableUIResizing` and `ForceUIResizing` also control whether or not manual UI resize behaviour is enabled. See [this section](#ui-font-resizing) for more information.
 
+#### Font overriding
+When translating to languages that use non-ASCII letters the game's default font might not be able to display some of those characters. This is the most common when translating to Chinese. To fix this you can supply your own ccustom font that will be used to display the missing characters (or all text in the game).
+
+ * `OverrideFont`: Changes the font of all text components. UGUI only.
+ * `OverrideFontTextMeshPro`: Consider using `FallbackFontTextMeshPro` instead. Changes the font of all text components regardless of `EnableUIResizing` and `ForceUIResizing`. TextMeshPro only.
+     This option is able to load a font in three different ways:
+     1. If the specified string indicates a path within the game folder, then that file will be attempted to be loaded as an asset bundle. Requires a custom asset bundle built specifically for the targeted game.
+     2. If the specified string matches name of a font installed on the system (e.g. Arial), the font will be attempted to be loaded as a TMP font. Requires TextMeshPro 3.2.0+ (see #854).
+     3. Otherwise, the string will be used to attempt to load a font through the Resources API. Default resources that are often distributed with TextMeshPro are: `Fonts & Materials/LiberationSans SDF` or `Fonts & Materials/ARIAL SDF`.
+ * `FallbackFontTextMeshPro`: Adds a fallback font that TextMesh Pro can use in case a specific character is not supported.
+
+These settings are not affected by `EnableUIResizing` and `ForceUIResizing`, but the resizing behavior may change how the custom font is displayed.
+
+##### Where to get custom fonts
+- You can download some pre-built asset bundles with TextMeshPro fonts in the release tab (TMP_Font_AssetBundles), but for now, they are not particularly well tested. If you want to try them out, simply download the .zip folder and put one of the font assets into the game folder. Then configure it up by writing the name of the file in the configuration file in `OverrideFontTextMeshPro` or `FallbackFontTextMeshPro`.
+- [sorrowmoil-MoeFont-for-XUnity.AutoTranslator](https://github.com/sorrowmoil/sorrowmoil-MoeFont-for-XUnity.AutoTranslator) - Repository full of fonts for variuous versions of Unity (zh-CN), more information in https://github.com/bbepis/XUnity.AutoTranslator/issues/842.
+
+##### How to create new custom fonts
+You will have to create the font in the same version of Unity Editor as your game and then add it to an AssetBundle. Check [this guide](https://github.com/bbepis/XUnity.AutoTranslator/wiki/TextMeshPro-Font-Asset-Creation-&-Packaging-Guide) for detailed steps.
+
 #### Reducing Translation Requests
-The following aims at reducing the number of requests send to the translation endpoint:
+The following aims at reducing the number of requests sent to the translation endpoint:
  * `EnableBatching`: Batches several translation requests into a single with supported endpoints.
  * `UseStaticTranslations`: Enables usage of internal lookup dictionary of various english-to-japanese terms.
  * `MaxCharactersPerTranslation`: Specifies the maximum length of a text to translate. Any texts longer than this is ignored by the plugin. Cannot be greater than 1000. **Never redistribute this mod with this value greater than 400**
