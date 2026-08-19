@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<Title>XUnity Resource Redirector for Unity</Title>
@@ -63,9 +63,9 @@
 		</Compile>
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="'$(SkipResgen)' != 'true'">
 		<EmbeddedResource Update="Properties\Resources.resx">
-			<Generator>ResXFileCodeGenerator</Generator>
+			
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
